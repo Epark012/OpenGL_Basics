@@ -19,6 +19,9 @@
     <Filter Include="Resource Files\Textures">
       <UniqueIdentifier>{1a1d3bc5-ea91-4858-b9d1-ee10fefde8a6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Model">
+      <UniqueIdentifier>{b2bc4c0c-c373-46e9-ad6a-8ede6d10f638}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="glad.c">
@@ -48,6 +51,12 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="default.vert">
@@ -55,6 +64,27 @@
     </None>
     <None Include="default.frag">
       <Filter>Resource Files\Shader</Filter>
+    </None>
+    <None Include="light.frag">
+      <Filter>Resource Files\Shader</Filter>
+    </None>
+    <None Include="light.vert">
+      <Filter>Resource Files\Shader</Filter>
+    </None>
+    <None Include="pyramid.vert">
+      <Filter>Resource Files\Shader</Filter>
+    </None>
+    <None Include="pyramid.frag">
+      <Filter>Resource Files\Shader</Filter>
+    </None>
+    <None Include="plane.vert">
+      <Filter>Resource Files\Shader</Filter>
+    </None>
+    <None Include="plane.frag">
+      <Filter>Resource Files\Shader</Filter>
+    </None>
+    <None Include="Porori_LP.fbx">
+      <Filter>Resource Files\Model</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -76,9 +106,24 @@
     <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="1.png">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="Tile1.png">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="planksSpec.png">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="planks.png">
       <Filter>Resource Files\Textures</Filter>
     </Image>
   </ItemGroup>

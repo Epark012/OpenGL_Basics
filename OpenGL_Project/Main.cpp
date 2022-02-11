@@ -1,88 +1,67 @@
-#include<iostream>
-#include<glad/glad.h>
-#include<glfw/glfw3.h>
+#include "Model.h"
 
-#include"shaderClass.h"
-#include"VAO.h"
-#include"VBO.h"
-#include"EBO.h"
-#include"Texture.h"
-#include"Camera.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
-#include<stb/stb_image.h>
-#include<glm/glm.hpp>
-#include<glm/gtc/matrix_transform.hpp>
-#include<glm/gtc/type_ptr.hpp>
-
-//Triangle info
-//Vertices Coordinates 
-GLfloat vertices[] =
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+// ---------------------------------------------------------------------------------------------------------
+void processInput(GLFWwindow* window)
 {
-	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+}
+
+
+// Vertices coordinates
+Vertex vertices[] =
+{ //     COORDINATES     /        COLORS        /    TexCoord    /       NORMALS     //
+	Vertex{glm::vec3(-1.0f, 0.0f,  1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
+	Vertex{glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
+	Vertex{glm::vec3(1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
+	Vertex{glm::vec3(1.0f, 0.0f,  1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)}
 };
 
+// Indices for vertices order
 GLuint indices[] =
 {
 	0, 1, 2,
+	0, 2, 3
+};
+
+Vertex lightVertices[] =
+{ //     COORDINATES     //
+	Vertex{glm::vec3(-0.1f, -0.1f,  0.1f)},
+	Vertex{glm::vec3(-0.1f, -0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f, -0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f, -0.1f,  0.1f)},
+	Vertex{glm::vec3(-0.1f,  0.1f,  0.1f)},
+	Vertex{glm::vec3(-0.1f,  0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f,  0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f,  0.1f,  0.1f)}
+};
+
+GLuint lightIndices[] =
+{
+	0, 1, 2,
 	0, 2, 3,
-	0, 1, 4,
-	1, 2, 4,
-	2, 3, 4,
-	3, 0, 4
+	0, 4, 7,
+	0, 7, 3,
+	3, 7, 6,
+	3, 6, 2,
+	2, 6, 5,
+	2, 5, 1,
+	1, 5, 4,
+	1, 4, 0,
+	4, 5, 6,
+	4, 6, 7
 };
 
-//Square info
-GLfloat sqrVertices[] =
-{
-	//Coordinates		 //Colors
-	-0.5f, -0.5f, 0.0f,    1.0f, 0.0f, 0.0f,	0.0f, 0.0f,	//Lower Left
-	-0.5f,  0.5f, 0.0f,    0.0f, 1.0f, 0.0f,	0.0f, 1.0f,	//Upper Left
-	 0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f,	1.0f, 1.0f,	//Upper Right
-	 0.5f, -0.5f, 0.0f,    1.0f, 1.0f, 1.0f,	1.0f, 0.0f	//Lower Right
-};
 
-GLuint sqrIndices[] =
-{
-	3, 2, 1, //Upper
-	1, 0, 3
-};
+//Scene Setting
 
-//Cube Vertices
-GLfloat cubeVertices[] =
-{
-	//Coordinates		//Color				Texture
-	-0.5f, -0.5f,  0.5f,	0.5f, 0.2f, 0.1f,	0.0f, 0.0f, //Lower
-	 0.5f, -0.5f,  0.5f,	0.5f, 0.2f, 0.1f,	0.0f, 1.0f, //Lower
-	 0.5f, -0.5f, -0.5f,	0.5f, 0.2f, 0.1f,	1.0f, 1.0f,	//Lower
-	-0.5f, -0.5f, -0.5f,	0.5f, 0.2f, 0.1f,	1.0f, 0.0f,	//Lower
-	-0.5f,  0.5f,  0.5f,	0.1f, 0.5f, 0.7f,	0.0f, 0.0f, //Upper
-	 0.5f,  0.5f,  0.5f,	0.1f, 0.5f, 0.7f,	0.0f, 1.0f,	//Upper
-	-0.5f,  0.5f, -0.5f,	0.1f, 0.5f, 0.7f,	1.0f, 1.0f,	//Upper
-	 0.5f,  0.5f, -0.5f,	0.1f, 0.5f, 0.7f,	1.0f, 0.0f	//Upper
-};
-
-GLuint cubeIndices[] =
-{
-	0, 1, 2, // Bottom
-	0, 2, 3,
-	4, 5, 6, // Top
-	4, 6, 7,
-	0, 1, 5, // Front
-	0, 5, 4,
-	1, 2, 6, //Right
-	1, 6, 5,
-	2, 3, 7, //Back
-	2, 7, 6,
-	0, 3, 7, //Left
-	0, 3, 4
-};
-
-const unsigned int width = 800;
-const unsigned int height = 800;
+const unsigned int WIDTH = 800;
+const unsigned int HEIGHT = 800;
 
 int main()
 {
@@ -99,7 +78,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	//Create a window of 800 by 800 pixels, naming it OpenGL Project
-	GLFWwindow* window = glfwCreateWindow(width, height, "OpenGL Project", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Project", NULL, NULL);
 
 	//Error Check if the window fails to create
 	if (window == NULL)
@@ -117,74 +96,87 @@ int main()
 
 	//Specify the viewport of OpenGL in the window
 	//In this case, the viewport goes from x = 0, y = 0 to x = 800, y = 800
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, WIDTH, HEIGHT);
 
-	Shader shaderProgram("default.vert", "default.frag");
+	//Texture textures[]
+	//{
+	//	//Texture
+	//	Texture("planks.png", "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE),
+	//	Texture("planksSpec.png", "specular", 1, GL_RED, GL_UNSIGNED_BYTE)
+	//};
 
-	VAO VAO1;
-	VAO1.Bind();
 
-	VBO VBO1(vertices, sizeof(vertices));
-	EBO EBO1(indices, sizeof(indices));
 
-	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8	* sizeof(float), (void*)0);
-	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8	* sizeof(float), (void*)(3*sizeof(float)));
-	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8	* sizeof(float), (void*)(6*sizeof(float)));
-	VAO1.Unbind();
-	VBO1.Unbind();
-	EBO1.Unbind();
+	//std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
+	//std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
+	//std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
 
-	//Texture
-	Texture adobeImg = Texture("1.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
-	adobeImg.TexUnit(shaderProgram, "tex0", 0);
+	//Mesh floor(verts, ind, tex);
+
+	////LightBox
+	//Shader lightShader("light.vert", "light.frag");
+
+	//std::vector <Vertex> lightVerts(lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
+	//std::vector <GLuint> lightInd(lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
+
+	//Mesh light(lightVerts, lightInd, tex);
+
+
+	//glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	//glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+	//glm::mat4 lightModel = glm::mat4(1.0f);
+	//lightModel = glm::translate(lightModel, lightPos);
+
+	//glm::vec3 cubePos = glm::vec3(0.0f, 0.0f, 0.0f);
+	//glm::mat4 cubeModel = glm::mat4(1.0f);
+	//cubeModel = glm::translate(cubeModel, cubePos);
+
+	//lightShader.Activate();
+	//glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
+	//glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+
+	//shaderProgram.Activate();
+	//glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
+	//glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	//glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
 
 	glEnable(GL_DEPTH_TEST);
 
 	//Camera
+	Camera camera(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 2.0f));
 
-	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
+	Shader shaderProgram("default.vert", "default.frag");
+
+	Model porori("Porori_LP.fbx");
 
 	//Main while loop
 	while(!glfwWindowShouldClose(window))
 	{
-
+		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
+		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//Tell OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 
+		// Handles camera inputs
 		camera.Inputs(window);
+		// Updates and exports the camera matrix to the Vertex Shader
+		camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-		camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "cameraMat");
+		porori.Draw(shaderProgram, camera);
 
-		//Texture
-		adobeImg.Bind();
-		//Bind the VAO so OpenGL knows to use it 
-		VAO1.Bind();
-		//Draw the triangle using GL_TRIANGLES
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0);
-
-		glfwSwapBuffers(window);	
-
-		//Take care of all GLFW events
+		// Swap the back buffer with the front buffer
+		glfwSwapBuffers(window);
+		// Take care of all GLFW events
 		glfwPollEvents();
 	}
 
-	//Delete all the objects we created
-	VAO1.Delete();
-	VBO1.Delete();
-	EBO1.Delete();
-	adobeImg.Delete();
-
 	shaderProgram.Delete();
-
-	//Delete window before ending the program
+	// Delete window before ending the program
 	glfwDestroyWindow(window);
-	//Terminating GLFW before ending the program
+	// Terminate GLFW before ending the program
 	glfwTerminate();
-
 	return 0;
 }

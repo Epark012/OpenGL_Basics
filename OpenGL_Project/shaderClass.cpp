@@ -24,7 +24,6 @@ Shader::Shader(const char* vertexFile, const char* fragmentFile)
 	const char* vertexSource = vertexCode.c_str();
 	const char* fragmentSource = fragmentCode.c_str();
 
-
 	//Create Vertex Shader Object and get reference 
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	//Attach Vertex Shader Source to the Vertex Shader Object 
@@ -77,7 +76,7 @@ void Shader::compileError(unsigned int shader, const char* type)
 		if (hasCompiled == GL_FALSE)
 		{
 			glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-			std::cout << "SHADER_COMPILATION_ERROR for" << type << "\n" << std::endl;
+			std::cout << "SHADER_COMPILATION_ERROR FOR " << type << "\n" << std::endl;
 		}
 	}
 	else
@@ -86,7 +85,7 @@ void Shader::compileError(unsigned int shader, const char* type)
 		if (hasCompiled == GL_FALSE)
 		{
 			glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-			std::cout << "SHADER_LINKING_ERROR for" << type << "\n" << std::endl;
+			std::cout << "SHADER_LINKING_ERROR FOR " << type << "\n" << std::endl;
 		}
 	}
 }
