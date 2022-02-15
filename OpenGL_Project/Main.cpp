@@ -1,14 +1,16 @@
 #include <iostream>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include "Shader.h"
+#include "model.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <stb/stb_image.h>
+//#include <stb/stb_image.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -130,7 +132,7 @@ GLuint lightIndices[] =
 };
 
 glm::vec3 cubePositions[] = {
-	glm::vec3(0.0f,  0.0f,  0.0f),
+	glm::vec3(0.0f,  0.0f,  5.0f),
 	glm::vec3(2.0f,  5.0f, -15.0f),
 	glm::vec3(-1.5f, -2.2f, -2.5f),
 	glm::vec3(-3.8f, -2.0f, -12.3f),
@@ -216,18 +218,18 @@ int main()
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	//load and generate the texture image
-	int width, height, nrChannels;
-	unsigned char* data = stbi_load("Tile1.png", &width, &height, &nrChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout<<"ERROR::TEXTURE::LOADING_FAILED\n" << std::endl;
-	}
-	stbi_image_free(data);
+	//int width, height, nrChannels;
+	//unsigned char* data = stbi_load("Tile1.png", &width, &height, &nrChannels, 0);
+	//if (data)
+	//{
+	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	//	glGenerateMipmap(GL_TEXTURE_2D);
+	//}
+	//else
+	//{
+	//	std::cout<<"ERROR::TEXTURE::LOADING_FAILED\n" << std::endl;
+	//}
+	//stbi_image_free(data);
 
 	//Create transformations
 	glm::mat4 model = glm::mat4(1.0f);
@@ -273,6 +275,8 @@ int main()
 	model = glm::translate(model, lightPos);
 	model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 	lightShader.SetMat4("model", model);
+
+	Model porori("Porori_LP.fbx");
 
 	//WireMode
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -341,6 +345,14 @@ int main()
 			shader.SetMat4("model", model);
 			glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
 		}
+
+		// render the loaded model
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+		shader.SetMat4("model", model);
+		porori.Draw(shader);
+
 
 		//glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
