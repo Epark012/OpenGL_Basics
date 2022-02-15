@@ -299,13 +299,32 @@ int main()
 
 		//Use shader program first	
 		shader.Use();
-		shader.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-		shader.SetVec3("lightPos", glm::vec3(lightPos.x, lightPos.y, lightPos.z));
-		
+		shader.SetVec3("light.position", lightPos);
+		shader.SetVec3("viewPos", glm::vec3(cameraPos));
+
+		// light properties
+		glm::vec3 lightColor;
+		lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
+		lightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
+		lightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
+		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
+		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+		shader.SetVec3("light.ambient", ambientColor);
+		shader.SetVec3("light.diffuse", diffuseColor);
+		shader.SetVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		// material properties
+		shader.SetVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+		shader.SetVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+		shader.SetVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f)); // specular lighting doesn't have full effect on this object's material
+		shader.SetFloat("material.shininess", 32.0f);
+
 		//Camera Function
 		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		shader.SetMat4("view", view);
+		shader.SetVec3("lightPos", glm::vec3(lightPos.x, lightPos.y, lightPos.z));
 
+		
 		//Bind VAO that we want to use
 		glBindVertexArray(VAO);
 
