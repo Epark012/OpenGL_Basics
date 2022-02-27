@@ -1,10 +1,19 @@
+#include "Graphics/imgui/imgui.h"
+#include "Graphics/imgui/imgui_impl_glfw.h"
+#include "Graphics/imgui/imgui_impl_opengl3.h"
+
 #include <iostream>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <stb/stb_image.h>
 
 #include "Shader.h"
 #include "model.h"
+
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,6 +25,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void ProcessInput(GLFWwindow* window);
+
+unsigned int loadTexture(char const* path);
+
 
 //Camera parameter
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -149,7 +161,7 @@ const unsigned int SCREEN_HEIGHT = 600;
 
 int main()
 {
-	std::cout << "Hellow, OpengGL Tutorial" << std::endl;
+	#pragma region OpenGL Basic Set-up
 
 	//Initialise GLFW and hint it, in this case, OpenGL version is 3.3
 	glfwInit();
@@ -165,6 +177,7 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
+
 	//Introduce the window the current context
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -173,19 +186,19 @@ int main()
 
 	//Load GLAD, call GLAD before using GLAD methods
 	gladLoadGL();
+#pragma endregion
 
 	//Shader
-
 	Shader shader("default.vert", "default.frag");
 
-	GLuint VAO, VBO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+	GLuint VAO1, VBO1, EBO;
+	glGenVertexArrays(1, &VAO1);
+	glGenBuffers(1, &VBO1);
 	glGenBuffers(1, &EBO);
 
-	glBindVertexArray(VAO);
+	glBindVertexArray(VAO1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO1);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertice), vertice, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -199,37 +212,6 @@ int main()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
 	glEnableVertexAttribArray(3);
-
-	//Texture 0 
-	//GLuint texture0;
-	//glGenTextures(1, &texture0);
-	//glBindTexture(GL_TEXTURE_2D, texture0);
-	//
-	////upside down
-	//stbi_set_flip_vertically_on_load(true);
-	//
-	////Set the texture wrapping / filtering options
-	////Texture Wrapping
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//
-	////Texture Filtering
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	//load and generate the texture image
-	//int width, height, nrChannels;
-	//unsigned char* data = stbi_load("Tile1.png", &width, &height, &nrChannels, 0);
-	//if (data)
-	//{
-	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	//	glGenerateMipmap(GL_TEXTURE_2D);
-	//}
-	//else
-	//{
-	//	std::cout<<"ERROR::TEXTURE::LOADING_FAILED\n" << std::endl;
-	//}
-	//stbi_image_free(data);
 
 	//Create transformations
 	glm::mat4 model = glm::mat4(1.0f);
@@ -246,6 +228,8 @@ int main()
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	#pragma region Lighting Cube
 
 	//Lighting Box
 	Shader lightShader("light.vert", "light.frag");
@@ -276,30 +260,99 @@ int main()
 	model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 	lightShader.SetMat4("model", model);
 
+	#pragma endregion
+
 	Model porori("Porori_LP.fbx");
 
+	//Texture 
+	unsigned int diffuseMap = loadTexture("diffuse.png");
+	unsigned int specularMap = loadTexture("specular.png");
+
+	//Shader configuration
+	shader.Use();
+	shader.SetInt("material.diffuse", 0);
+	shader.SetInt("material.specular", 1);
+
+	//Shader screen("screen.vert", "screen.frag");
+	//screen.Use();
+	//screen.SetInt("screenTexture", 0);
+
+	#pragma region Framebuffer / RenderBuffer
+	//Generate a frame buffer
+	GLuint fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	//Generate a texture
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WITDH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	//attach it  to currently bound framebuffer object
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+	GLuint rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WITDH, SCREEN_HEIGHT);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER::FAILED_COMPLETION" << std::endl;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	#pragma endregion
+
+
+	#pragma region OpenGL Scene Configuration
 	//WireMode
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	//Depth Test
 	glEnable(GL_DEPTH_TEST);
+	#pragma endregion
+
+	#pragma region imgui configuration
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
+	#pragma endregion
+
 
 	//Main Loop
 	while (!glfwWindowShouldClose(window))
 	{
 		//Input
-		ProcessInput(window);
+
+		if(!io.WantCaptureMouse)
+		{
+			ProcessInput(window);
+		}
 
 		//DeltaTime
 		float currentFrameTime = glfwGetTime();
 		deltaTime = currentFrameTime - lastFrameTime;
 		lastFrameTime = currentFrameTime;
 
-		glClearColor(0.2f, 0.2f, 0.2f, 0.8f);
+		//Framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glEnable(GL_DEPTH_TEST);
+
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//Bind Texture
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, texture0);
+
+		//imgui 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		//Use shader program first	
 		shader.Use();
@@ -307,20 +360,21 @@ int main()
 		shader.SetVec3("viewPos", glm::vec3(cameraPos));
 
 		// light properties
-		glm::vec3 lightColor;
-		lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
-		lightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
-		lightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
-		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
-		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+
+		glm::vec3 diffuseStrength = glm::vec3(1.0f);
+		glm::vec3 ambientStrength = glm::vec3(0.25f);
+
+		glm::vec3 lightColor = glm::vec3(1.0f);
+		glm::vec3 diffuseColor = lightColor * diffuseStrength; // decrease the influence
+		glm::vec3 ambientColor = diffuseColor * ambientStrength; // low influence
 		shader.SetVec3("light.ambient", ambientColor);
 		shader.SetVec3("light.diffuse", diffuseColor);
 		shader.SetVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
 		// material properties
-		shader.SetVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-		shader.SetVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-		shader.SetVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f)); // specular lighting doesn't have full effect on this object's material
+		shader.SetVec3("material.ambient", glm::vec3(1.0f));
+		shader.SetVec3("material.diffuse", glm::vec3(1.0f));
+		shader.SetVec3("material.specular", glm::vec3(1.0f)); // specular lighting doesn't have full effect on this object's material
 		shader.SetFloat("material.shininess", 32.0f);
 
 		//Camera Function
@@ -328,9 +382,15 @@ int main()
 		shader.SetMat4("view", view);
 		shader.SetVec3("lightPos", glm::vec3(lightPos.x, lightPos.y, lightPos.z));
 
+		// bind diffuse map
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularMap);
 		
 		//Bind VAO that we want to use
-		glBindVertexArray(VAO);
+		glBindVertexArray(VAO1);
 
 		for (GLuint i = 0; i < 10; i++)
 		{
@@ -351,29 +411,53 @@ int main()
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
 		shader.SetMat4("model", model);
+
 		porori.Draw(shader);
+		glBindVertexArray(0);
 
+		//Framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
 
-		//glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
+		//glClearColor(1.0f, 1.0f, 1.0f, 1.0f); 
+		glClear(GL_COLOR_BUFFER_BIT);
 
-		//float timeValue = glfwGetTime();
-		//float offsetValue = sin(timeValue) / 2;
-		//shader.SetFloat("scale", offsetValue);
-
-		// also draw the lamp object
+		// also draw the lamp object - screen
 		lightShader.Use();
 		lightShader.SetMat4("view", view);
 
 		glBindVertexArray(lightVAO);
 		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
+		ImGui::Begin("OpenGL Window in imgui");
+		{
+			ImGui::BeginChild("Game Rendering");
+			ImGui::GetWindowDrawList()->AddImage(
+				(void*)texture,
+				ImVec2(ImGui::GetCursorScreenPos()),
+				ImVec2(ImGui::GetCursorScreenPos().x + ImGui::GetWindowSize().x,
+					ImGui::GetCursorScreenPos().y + ImGui::GetWindowSize().y),
+				ImVec2(0, 1),
+				ImVec2(1, 0)
+				);
+			ImGui::EndChild();
+		}
+		ImGui::End();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	glDeleteVertexArrays(1, &VAO);
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	glDeleteVertexArrays(1, &VAO1);
 	glDeleteVertexArrays(1, &lightVAO);
-	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &VBO1);
 	glDeleteBuffers(1, &EBO);
 	glDeleteProgram(shader.ID);
 
@@ -465,4 +549,41 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 		fov = 1.0f;
 	if (fov > 45.0f)
 		fov = 45.0f;
+}
+
+unsigned int loadTexture(char const* path)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+
+	int width, height, nrComponents;
+	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		GLenum format;
+		if (nrComponents == 1)
+			format = GL_RED;
+		else if (nrComponents == 3)
+			format = GL_RGB;
+		else if (nrComponents == 4)
+			format = GL_RGBA;
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
+	}
+
+	return textureID;
 }

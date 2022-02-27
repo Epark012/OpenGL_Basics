@@ -22,6 +22,12 @@
     <Filter Include="Resource Files\Model">
       <UniqueIdentifier>{b2bc4c0c-c373-46e9-ad6a-8ede6d10f638}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\imgui">
+      <UniqueIdentifier>{88cff812-ff03-4e63-bdbe-1f6dd2ddaf6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\imgui">
+      <UniqueIdentifier>{16ce14b8-8ca0-4fd3-a8f7-c392466d644a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -38,6 +44,36 @@
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VAO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VBO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EBO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\imgui\imgui_tables.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\imgui\imgui_widgets.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\imgui\imgui.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\imgui\imgui_demo.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\imgui\imgui_draw.cpp">
+      <Filter>Resource Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\imgui\imgui_impl_glfw.cpp">
+      <Filter>Resource Files\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -56,6 +92,12 @@
     <None Include="light.frag">
       <Filter>Resource Files\Shader</Filter>
     </None>
+    <None Include="screen.vert">
+      <Filter>Resource Files\Shader</Filter>
+    </None>
+    <None Include="screen.frag">
+      <Filter>Resource Files\Shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="1.png">
@@ -64,10 +106,10 @@
     <Image Include="Tile1.png">
       <Filter>Resource Files\Textures</Filter>
     </Image>
-    <Image Include="planksSpec.png">
+    <Image Include="diffuse.png">
       <Filter>Resource Files\Textures</Filter>
     </Image>
-    <Image Include="planks.png">
+    <Image Include="specular.png">
       <Filter>Resource Files\Textures</Filter>
     </Image>
   </ItemGroup>
@@ -80,6 +122,42 @@
     </ClInclude>
     <ClInclude Include="Model.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VAO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\imgui\imgui_internal.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\imgui\imstb_rectpack.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\imgui\imstb_textedit.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\imgui\imstb_truetype.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\imgui\imconfig.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\imgui\imgui.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\imgui\imgui_impl_glfw.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\imgui\imgui_impl_opengl3.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\imgui\imgui_impl_opengl3_loader.h">
+      <Filter>Header Files\imgui</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

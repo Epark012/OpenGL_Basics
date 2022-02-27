@@ -126,6 +126,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>Graphics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -151,11 +152,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EBO.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="Graphics\imgui\imgui.cpp" />
+    <ClCompile Include="Graphics\imgui\imgui_demo.cpp" />
+    <ClCompile Include="Graphics\imgui\imgui_draw.cpp" />
+    <ClCompile Include="Graphics\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="Graphics\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="Graphics\imgui\imgui_tables.cpp" />
+    <ClCompile Include="Graphics\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="stb.cpp" />
+    <ClCompile Include="VAO.cpp" />
+    <ClCompile Include="VBO.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="default.frag" />
@@ -163,17 +174,31 @@
     <None Include="light.frag" />
     <None Include="light.vert" />
     <None Include="Porori_LP.fbx" />
+    <None Include="screen.frag" />
+    <None Include="screen.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="1.png" />
-    <Image Include="planks.png" />
-    <Image Include="planksSpec.png" />
+    <Image Include="diffuse.png" />
+    <Image Include="specular.png" />
     <Image Include="Tile1.png" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EBO.h" />
+    <ClInclude Include="Graphics\imgui\imconfig.h" />
+    <ClInclude Include="Graphics\imgui\imgui.h" />
+    <ClInclude Include="Graphics\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="Graphics\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="Graphics\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="Graphics\imgui\imgui_internal.h" />
+    <ClInclude Include="Graphics\imgui\imstb_rectpack.h" />
+    <ClInclude Include="Graphics\imgui\imstb_textedit.h" />
+    <ClInclude Include="Graphics\imgui\imstb_truetype.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="VAO.h" />
+    <ClInclude Include="VBO.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
