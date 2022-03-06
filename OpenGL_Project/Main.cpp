@@ -26,9 +26,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void ProcessInput(GLFWwindow* window);
 
-unsigned int loadTexture(char const* path);
-
-
 //Camera parameter
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -156,8 +153,8 @@ glm::vec3 cubePositions[] = {
 	glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
-const unsigned int SCREEN_WITDH = 800;
-const unsigned int SCREEN_HEIGHT = 600;
+unsigned int SCREEN_WITDH = 800;
+unsigned int SCREEN_HEIGHT = 600;
 
 int main()
 {
@@ -168,6 +165,12 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+	SCREEN_WITDH = mode->width;
+	SCREEN_HEIGHT = mode->height;
+
 
 	//Create a window and debug if there is an error
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WITDH, SCREEN_HEIGHT, "MODEL RENDERER PROJECT", NULL, NULL);
@@ -186,48 +189,20 @@ int main()
 
 	//Load GLAD, call GLAD before using GLAD methods
 	gladLoadGL();
+	//stbi_set_flip_vertically_on_load(true);
 #pragma endregion
 
 	//Shader
-	Shader shader("default.vert", "default.frag");
+	Shader shader("basic.vert", "basic.frag");
 
-	GLuint VAO1, VBO1, EBO;
-	glGenVertexArrays(1, &VAO1);
-	glGenBuffers(1, &VBO1);
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO1);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertice), vertice, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3* sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
-	glEnableVertexAttribArray(3);
-
+	
 	//Create transformations
 	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	glm::mat4 projection = glm::mat4(1.0f);
 
 	shader.Use();
-	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
-	projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WITDH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-
-	//Pass the matrixes
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	Model porori("Graphics/model/Survival_BackPack_2.fbx");
 
 	#pragma region Lighting Cube
 
@@ -261,22 +236,6 @@ int main()
 	lightShader.SetMat4("model", model);
 
 	#pragma endregion
-
-	Model porori("Porori_LP.fbx");
-
-	//Texture 
-	unsigned int diffuseMap = loadTexture("diffuse.png");
-	unsigned int specularMap = loadTexture("specular.png");
-
-	//Shader configuration
-	shader.Use();
-	shader.SetInt("material.diffuse", 0);
-	shader.SetInt("material.specular", 1);
-
-	//Shader screen("screen.vert", "screen.frag");
-	//screen.Use();
-	//screen.SetInt("screenTexture", 0);
-
 	#pragma region Framebuffer / RenderBuffer
 	//Generate a frame buffer
 	GLuint fbo;
@@ -305,15 +264,12 @@ int main()
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	#pragma endregion
-
-
 	#pragma region OpenGL Scene Configuration
 	//WireMode
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	//Depth Test
 	glEnable(GL_DEPTH_TEST);
 	#pragma endregion
-
 	#pragma region imgui configuration
 
 	IMGUI_CHECKVERSION();
@@ -326,16 +282,14 @@ int main()
 	#pragma endregion
 
 
+
 	//Main Loop
 	while (!glfwWindowShouldClose(window))
 	{
 		//Input
 
-		if(!io.WantCaptureMouse)
-		{
-			ProcessInput(window);
-		}
-
+		ProcessInput(window);
+		
 		//DeltaTime
 		float currentFrameTime = glfwGetTime();
 		deltaTime = currentFrameTime - lastFrameTime;
@@ -348,7 +302,6 @@ int main()
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 		//imgui 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -356,61 +309,18 @@ int main()
 
 		//Use shader program first	
 		shader.Use();
-		shader.SetVec3("light.position", lightPos);
-		shader.SetVec3("viewPos", glm::vec3(cameraPos));
-
-		// light properties
-
-		glm::vec3 diffuseStrength = glm::vec3(1.0f);
-		glm::vec3 ambientStrength = glm::vec3(0.25f);
-
-		glm::vec3 lightColor = glm::vec3(1.0f);
-		glm::vec3 diffuseColor = lightColor * diffuseStrength; // decrease the influence
-		glm::vec3 ambientColor = diffuseColor * ambientStrength; // low influence
-		shader.SetVec3("light.ambient", ambientColor);
-		shader.SetVec3("light.diffuse", diffuseColor);
-		shader.SetVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-		// material properties
-		shader.SetVec3("material.ambient", glm::vec3(1.0f));
-		shader.SetVec3("material.diffuse", glm::vec3(1.0f));
-		shader.SetVec3("material.specular", glm::vec3(1.0f)); // specular lighting doesn't have full effect on this object's material
-		shader.SetFloat("material.shininess", 32.0f);
 
 		//Camera Function
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-		shader.SetMat4("view", view);
-		shader.SetVec3("lightPos", glm::vec3(lightPos.x, lightPos.y, lightPos.z));
-
-		// bind diffuse map
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuseMap);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specularMap);
-		
-		//Bind VAO that we want to use
-		glBindVertexArray(VAO1);
-
-		for (GLuint i = 0; i < 10; i++)
-		{
-			float angle = 20.0f * i;
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			if (i % 3 == 0)
-			{
-				angle = glfwGetTime() * 25.0f;
-			}
-			model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 0.3f, 0.5f));
-			shader.SetMat4("model", model);
-			glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
-		}
-
-		// render the loaded model
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -10.0f));
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WITDH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		shader.SetMat4("projection", projection);
+		shader.SetMat4("view", view);
 		shader.SetMat4("model", model);
+		//shader.SetVec3("lightPos", glm::vec3(lightPos.x, lightPos.y, lightPos.z));
 
 		porori.Draw(shader);
 		glBindVertexArray(0);
@@ -429,7 +339,12 @@ int main()
 		glBindVertexArray(lightVAO);
 		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
-		ImGui::Begin("OpenGL Window in imgui");
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		bool mainWindowOpen = true;
+		ImGui::SetNextWindowPos(ImVec2(0,0));
+		ImGui::SetNextWindowSize(ImVec2(SCREEN_WITDH * 0.75, SCREEN_HEIGHT));
+		ImGui::Begin("MAIN RENDERING WINDOW", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
 		{
 			ImGui::BeginChild("Game Rendering");
 			ImGui::GetWindowDrawList()->AddImage(
@@ -444,6 +359,24 @@ int main()
 		}
 		ImGui::End();
 
+
+		ImGui::SetNextWindowPos(ImVec2(SCREEN_WITDH * 0.75, 0));
+		ImGui::SetNextWindowSize(ImVec2(SCREEN_WITDH * 0.25, SCREEN_HEIGHT * 0.5));
+		ImGui::Begin("BASIC INFO", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+		{
+			ImGui::BeginChild("Info");
+			ImGui::Text("Test info 1");
+			ImGui::EndChild();
+		}
+		ImGui::End();
+
+		ImGui::SetNextWindowPos(ImVec2(SCREEN_WITDH * 0.75, SCREEN_HEIGHT * 0.5));
+		ImGui::SetNextWindowSize(ImVec2(SCREEN_WITDH * 0.25, SCREEN_HEIGHT * 0.5));
+		ImGui::Begin("Test", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+		{
+
+		}
+		ImGui::End();
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -455,10 +388,7 @@ int main()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	glDeleteVertexArrays(1, &VAO1);
 	glDeleteVertexArrays(1, &lightVAO);
-	glDeleteBuffers(1, &VBO1);
-	glDeleteBuffers(1, &EBO);
 	glDeleteProgram(shader.ID);
 
 	glfwTerminate();
@@ -549,41 +479,4 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 		fov = 1.0f;
 	if (fov > 45.0f)
 		fov = 45.0f;
-}
-
-unsigned int loadTexture(char const* path)
-{
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-
-	int width, height, nrComponents;
-	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
-	if (data)
-	{
-		GLenum format;
-		if (nrComponents == 1)
-			format = GL_RED;
-		else if (nrComponents == 3)
-			format = GL_RGB;
-		else if (nrComponents == 4)
-			format = GL_RGBA;
-
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		stbi_image_free(data);
-	}
-	else
-	{
-		std::cout << "Texture failed to load at path: " << path << std::endl;
-		stbi_image_free(data);
-	}
-
-	return textureID;
 }

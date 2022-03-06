@@ -13,37 +13,38 @@
 
 #define MAX_BONE_INFLUENCE 4
 
-struct Vertex 
+struct Vertex
 {
 	glm::vec3 Position;
 	glm::vec3 Normal;
 	glm::vec2 TexCoords;
+
+	// tangent
+	glm::vec3 Tangent;
+	// bitangent
+	glm::vec3 Bitangent;
 };
-
-
 struct Texture
 {
-	GLuint ID;
+	unsigned int id;
 	std::string type;
 	std::string path;
 };
+class Mesh
+{
+public:
+	std::vector<Vertex> vertices;
+	std::vector<unsigned int> indices;
+	std::vector<Texture> textures;
 
-class Mesh {
+	/*Functions*/
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indecies, std::vector<Texture> textures);
+	void Draw(Shader shader);
 
-	public:
-		std::vector<Vertex> vertices;
-		std::vector<GLuint> indices;
-		std::vector<Texture> textures;
-		GLuint VAO;
-
-		Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures);
-		void Draw(Shader& shader);
-
-	private:
-
-		GLuint VBO, EBO;
-		void setUpMesh();
+	/*render data*/ // I put then public for the planet and rock instancing example
+	unsigned int VAO, VBO, EBO;
+private:
+	/*functions*/
+	void setupMesh();
 };
-
-
 #endif // !MESH_H

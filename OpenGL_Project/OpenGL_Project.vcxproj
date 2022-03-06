@@ -163,14 +163,19 @@
     <ClCompile Include="Graphics\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="stb.cpp" />
     <ClCompile Include="VAO.cpp" />
     <ClCompile Include="VBO.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="basic.frag" />
+    <None Include="basic.vert" />
     <None Include="default.frag" />
     <None Include="default.vert" />
+    <None Include="Graphics\model\monkey.fbx" />
+    <None Include="Graphics\model\Survival_BackPack_2.fbx" />
     <None Include="light.frag" />
     <None Include="light.vert" />
     <None Include="Porori_LP.fbx" />
